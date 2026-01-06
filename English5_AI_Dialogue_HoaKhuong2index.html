@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>English 5 AI Dialogue – Hoa Khuong 2</title>
+
+<style>
+body{
+ font-family:"Comic Sans MS",Arial;
+ background:linear-gradient(135deg,#e3f2fd,#fff9c4);
+ padding:20px;
+}
+.container{
+ max-width:1000px;margin:auto;background:#ffffff;
+ border-radius:28px;padding:25px;
+ box-shadow:0 15px 30px rgba(0,0,0,0.2);
+}
+.school{
+ text-align:center;font-size:26px;
+ font-weight:bold;color:#0d47a1;
+}
+h1{text-align:center;color:#f57c00;}
+.card{
+ background:#f9fbff;padding:16px;border-radius:18px;
+ margin-top:15px;border:2px dashed #90caf9;
+}
+input,select{
+ width:100%;padding:10px;border-radius:12px;
+ border:2px solid #bbdefb;margin-top:6px;
+ font-size:15px;
+}
+button{
+ background:#1976d2;color:white;border:none;
+ border-radius:25px;padding:10px 18px;
+ font-size:16px;margin-top:10px;cursor:pointer;
+}
+button:hover{background:#0d47a1;}
+.dialogue{
+ background:#fffde7;padding:18px;border-radius:14px;
+ min-height:150px;
+}
+.ai{color:#d84315;font-weight:bold;}
+.student{color:#2e7d32;font-weight:bold;}
+.feedback{
+ background:#e3f2fd;margin-top:10px;
+ padding:12px;border-radius:12px;
+ color:#0d47a1;
+}
+.history{
+ background:#e8f5e9;padding:12px;border-radius:12px;
+ margin-top:15px;font-size:14px;
+}
+.certificate{
+ display:none;margin-top:35px;padding:35px;
+ border-radius:30px;
+ background:linear-gradient(135deg,#e3f2fd,#fff176);
+ border:6px double #1976d2;text-align:center;
+}
+.certificate h2{color:#0d47a1;}
+.stars{font-size:36px;}
+.sign{
+ display:flex;justify-content:space-between;
+ margin-top:40px;font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="school">🏫 HOA KHUONG 2 PRIMARY SCHOOL</div>
+<h1>💬 English 5 – AI Speaking Dialogue</h1>
+
+<div class="card">
+<h3>👧🧒 Student Information</h3>
+<input id="studentName" placeholder="Full name">
+<input id="studentClass" placeholder="Class (e.g. 5/1)">
+</div>
+
+<div class="card">
+<h3>📘 Choose Unit</h3>
+<select id="unit"></select>
+<button onclick="startDialogue()">▶ Start Dialogue</button>
+</div>
+
+<div class="card">
+<h3>🤖 AI – Student Conversation</h3>
+<div id="dialogue" class="dialogue"></div>
+<button onclick="startSpeak()">🎤 Student Answer</button>
+<div id="feedback" class="feedback"></div>
+</div>
+
+<div class="card">
+<h3>📚 Dialogue History</h3>
+<div id="history" class="history"></div>
+</div>
+
+<div id="certificate" class="certificate">
+<div class="school">HOA KHUONG 2 PRIMARY SCHOOL</div>
+<h2>CERTIFICATE OF ENGLISH DIALOGUE COMPLETION</h2>
+<p>This certificate is proudly presented to</p>
+<h2 id="cName"></h2>
+<p>Class: <b id="cClass"></b></p>
+<p>For successfully completing</p>
+<p><b id="cUnit"></b></p>
+<p><b>English AI Speaking Dialogue – Grade 5</b></p>
+<div class="stars">⭐⭐⭐⭐⭐</div>
+<p>🎉 Keep practising English every day!</p>
+
+<div class="sign">
+<div>Principal<br>Tran Thi Kim Yen</div>
+<div>Teacher<br>Pham Thi Ngoc Bich</div>
+</div>
+</div>
+
+</div>
+
+<audio id="clap">
+<source src="https://www.soundjay.com/human/applause-8.mp3">
+</audio>
+
+<script>
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+const recognition=new SpeechRecognition();
+recognition.lang="en-GB";
+
+const units={
+5:{
+ name:"Unit 5: My future job",
+ questions:[
+  "What would you like to be?",
+  "Why would you like to be a "
+ ],
+ model:[
+  "I'd like to be a doctor.",
+  "Because I'd like to help people."
+ ]
+}
+};
+
+const unitSelect=document.getElementById("unit");
+for(let u in units){
+ unitSelect.innerHTML+=`<option value="${u}">${units[u].name}</option>`;
+}
+
+let currentUnit=5;
+let qIndex=0;
+let lastKeyword="";
+
+function speakAI(text){
+ const u=new SpeechSynthesisUtterance(text);
+ u.lang="en-GB";u.rate=0.9;
+ speechSynthesis.speak(u);
+ document.getElementById("dialogue").innerHTML+=
+ `<p class='ai'>🤖 AI: ${text}</p>`;
+}
+
+function startDialogue(){
+ qIndex=0;
+ document.getElementById("dialogue").innerHTML="";
+ document.getElementById("feedback").innerHTML="";
+ speakAI(units[currentUnit].questions[0]);
+}
+
+function startSpeak(){recognition.start();}
+
+recognition.onresult=e=>{
+ const answer=e.results[0][0].transcript;
+ document.getElementById("dialogue").innerHTML+=
+ `<p class='student'>🧒 Student: ${answer}</p>`;
+
+ detailedFeedback(answer, units[currentUnit].model[qIndex]);
+
+ if(qIndex===0){
+  const words=answer.split(" ");
+  lastKeyword=words[words.length-1];
+  speakAI("Good job! Why would you like to be a "+lastKeyword+"?");
+ }else{
+  finish();
+ }
+ qIndex++;
+ saveHistory(answer);
+};
+
+function detailedFeedback(student, model){
+ let fb="";
+
+ // Pronunciation
+ if(student.length < model.length*0.7){
+  fb+="🔊 <b>Phát âm:</b> Em nói còn thiếu từ, cần nói chậm và rõ hơn.<br>";
+ }else{
+  fb+="🔊 <b>Phát âm:</b> Tương đối rõ 👍<br>";
+ }
+
+ // Stress
+ const key=model.split(" ").slice(-2).join(" ");
+ if(!student.toLowerCase().includes(key.toLowerCase())){
+  fb+="📌 <b>Nhấn từ:</b> Em cần nhấn mạnh từ <i>"+key+"</i>.<br>";
+ }else{
+  fb+="📌 <b>Nhấn từ:</b> Em nhấn đúng từ chính ⭐<br>";
+ }
+
+ // Meaning & grammar (VN)
+ if(student.toLowerCase()!==model.toLowerCase()){
+  fb+="💡 <b>Gợi ý sửa:</b><br>";
+  fb+="Câu mẫu đúng là:<br><i>“"+model+"”</i><br>";
+  fb+="👉 <b>Giải thích:</b> Em cần dùng đúng cấu trúc và đủ ý.";
+ }else{
+  fb+="💡 <b>Ý nghĩa:</b> Em dùng câu đúng và phù hợp 👏";
+ }
+
+ document.getElementById("feedback").innerHTML=fb;
+}
+
+function saveHistory(text){
+ let h=localStorage.getItem("dialogueHistory")||"";
+ h+=units[currentUnit].name+": "+text+"<br>";
+ localStorage.setItem("dialogueHistory",h);
+ document.getElementById("history").innerHTML=h;
+}
+
+function finish(){
+ speakAI("Excellent! You completed the dialogue.");
+ document.getElementById("cName").innerText=document.getElementById("studentName").value;
+ document.getElementById("cClass").innerText=document.getElementById("studentClass").value;
+ document.getElementById("cUnit").innerText=units[currentUnit].name;
+ document.getElementById("certificate").style.display="block";
+ document.getElementById("clap").play();
+}
+
+document.getElementById("history").innerHTML=
+ localStorage.getItem("dialogueHistory")||"";
+</script>
+
+</body>
+</html>
